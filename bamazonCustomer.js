@@ -3,33 +3,80 @@ var inquirer = require("inquirer");
 
 var connection = mysql.createConnection({
   host: "localhost",
-
-  // Your port; if not 3306
-  port: 3306,
-
-  // Your username
   user: "root",
-
-  // Your password
   password: "password",
-  database: "products"
+  database: "bamazon_DB"
 });
 
 connection.connect(function(err) {
     if (err) throw err;
-    runSearch();
+    startapp();
   });
   
-  function runSearch() {
-    inquirer
-      .prompt({
-        name: "action",
-        type: "list",
-        message: "What is the ID Number of the product you would like to buy?",
-        choices: [
-          "Find songs by artist",
-          "Find all artists who appear more than once",
-          "Find data within a specific range",
-          "Search for a specific song"
-        ]
-      })
+  function startApp(){
+    connection.query("SELECT * FROM products", function(err, res){
+      if(err){
+          console.log(err);
+      }
+      for(var i = 0; i < res.length; i++){
+      
+       console.log("ID: " + res[i].id + "   " + "Product: " + res[i].product_name + "   " + "Price: " + "$" + res[i].price + '\n');
+      }
+      inquirer.prompt([
+          {
+          type: "input",
+          message: "What is the id number of the product you would like to buy?",
+          name: "productID"
+          },
+          {
+          type: "input",
+          message: "How many would you like to purchase?",
+          name: "number"
+          }
+      ]).then(function(reply){
+          for(var i = 0; i < res.length; i++){
+              if(parseInt(reply.productID) === res[i].id){
+              console.log("[Shopping Bag]: " + res[i].product_name + ' ' + "$" + res[i].price);
+              
+                if(parseInt(reply.number) < res[i].stock_quantity){
+                 
+                  var total = reply.number * res[i].price;
+                  console.log("*************************")
+                  console.log("QUANTITIY IN STOCK");
+                  console.log("*************************")
+                  console.log("*****************************")
+                  console.log("SALE TOTAL: " + "$" + total);
+                  console.log("*****************************")
+                  connection.query(
+                      'UPDATE products SET ? WHERE ?',
+                      [
+                          {
+                            stock_quantity: res[i].stock_quantity - reply.number
+                          },
+                          {
+                              id: reply.productID
+                          }
+                      ],
+                      function(err){
+                          if(err) throw err;
+                          console.log("database updated");
+                      }
+                      );
+                      endConnection();
+                  
+                }else{
+                  console.log("*********************************")
+                  console.log("INSUFFICIENT QUANTITIY!!!");
+                  console.log("*********************************")
+                  startApp();
+               }
+
+              }
+          }       
+      });
+  });
+}
+
+function endConnection(){
+  connection.end();
+}
