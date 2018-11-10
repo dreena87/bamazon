@@ -10,10 +10,10 @@ var connection = mysql.createConnection({
 
 connection.connect(function(err) {
     if (err) throw err;
-    startapp();
+    startAmazon();
   });
   
-  function startApp(){
+  function startAmazon(){
     connection.query("SELECT * FROM products", function(err, res){
       if(err){
           console.log(err);
@@ -41,12 +41,11 @@ connection.connect(function(err) {
                 if(parseInt(reply.number) < res[i].stock_quantity){
                  
                   var total = reply.number * res[i].price;
-                  console.log("*************************")
+                  
                   console.log("QUANTITIY IN STOCK");
-                  console.log("*************************")
-                  console.log("*****************************")
+              
                   console.log("SALE TOTAL: " + "$" + total);
-                  console.log("*****************************")
+                  
                   connection.query(
                       'UPDATE products SET ? WHERE ?',
                       [
